@@ -6,6 +6,7 @@ function App() {
   const [articleContent, setArticContent] = useState('');
   const [rewrittenContent, setRewrittenContent] = useState('');
   const [loading, setLoading] = useState(true);
+  const [tokenUsage, setTokenUsage] = useState(0);
 
   useEffect(() => {
     const scrapeArticle = async () => {
@@ -47,12 +48,15 @@ function App() {
         setLoading(true); // Show loading state while starting
 
         // Start streaming immediately
-        await callMistralAPI(scrapedContent, (chunk) => {
-          setRewrittenContent(prev => {
-            // Force React to re-render by creating a new string
-            return prev + chunk;
-          });
-        });
+        await callMistralAPI(
+          scrapedContent, 
+          (chunk) => {
+            setRewrittenContent(prev => prev + chunk);
+          },
+          (tokens) => {
+            setTokenUsage(tokens);
+          }
+        );
         
       } catch (error) {
         setArticContent('Error scraping content: ' + error.message);
@@ -81,6 +85,12 @@ function App() {
             paragraph && <p key={index} className="mb-2 text-gray-700">{paragraph}</p>
           ))}
         </div>
+        
+        {tokenUsage > 0 && (
+          <div className="text-sm text-gray-500 mt-4">
+            Tokens used: {tokenUsage}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
-export const callMistralAPI = async (content, onChunk) => {
+export const callMistralAPI = async (content, onChunk, onComplete) => {
+  let totalTokens = 0;
+  
   try {
     const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
@@ -8,12 +10,19 @@ export const callMistralAPI = async (content, onChunk) => {
       },
       body: JSON.stringify({
         model: "mistral-large-latest",
-        messages: [{
-          role: "user",
-          content: `Please rewrite this article in a clear and concise way: ${content}`
-        }],
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant that rewrites articles to be clear and concise while maintaining their key information."
+          },
+          {
+            role: "user",
+            content: `Please rewrite this article in a clear and concise way: ${content}`
+          }
+        ],
         temperature: 0.7,
-        stream: true
+        stream: true,
+        max_tokens: 50000
       })
     });
 
@@ -36,12 +45,21 @@ export const callMistralAPI = async (content, onChunk) => {
             const parsed = JSON.parse(data);
             const content = parsed.choices[0].delta.content;
             if (content) onChunk(content);
+            
+            if (parsed.usage) {
+              totalTokens = parsed.usage.total_tokens;
+            }
           } catch (e) {
             console.error('Error parsing chunk:', e);
           }
         }
       }
     }
+    
+    if (onComplete) {
+      onComplete(totalTokens);
+    }
+    
   } catch (error) {
     console.error('Error calling Mistral API:', error);
     return 'Error rewriting content';
