@@ -43,14 +43,20 @@ function App() {
 
         const scrapedContent = result.result;
         setArticContent(scrapedContent);
+        setRewrittenContent(''); // Reset content
+        setLoading(true); // Show loading state while starting
+
+        // Start streaming immediately
+        await callMistralAPI(scrapedContent, (chunk) => {
+          setRewrittenContent(prev => {
+            // Force React to re-render by creating a new string
+            return prev + chunk;
+          });
+        });
         
-        // Updated API call using imported function
-        const rewritten = await callMistralAPI(scrapedContent);
-        setRewrittenContent(rewritten);
-        
-        setLoading(false);
       } catch (error) {
         setArticContent('Error scraping content: ' + error.message);
+      } finally {
         setLoading(false);
       }
     };
@@ -64,17 +70,17 @@ function App() {
         <h1 className="text-xl font-bold text-blue-600 mb-4">
           Rewritten Article
         </h1>
-        {loading ? (
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        ) : (
-          <div className="prose prose-sm max-w-none">
-            {rewrittenContent.split('\n').map((paragraph, index) => (
-              paragraph && <p key={index} className="mb-2 text-gray-700">{paragraph}</p>
-            ))}
-          </div>
-        )}
+        <div className="prose prose-sm max-w-none">
+          {loading && (
+            <div className="flex items-center mb-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+              <span className="text-sm text-gray-600">Rewriting...</span>
+            </div>
+          )}
+          {rewrittenContent.split('\n').map((paragraph, index) => (
+            paragraph && <p key={index} className="mb-2 text-gray-700">{paragraph}</p>
+          ))}
+        </div>
       </div>
     </div>
   );
