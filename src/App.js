@@ -3,7 +3,34 @@ import { useState, useEffect } from 'react';
 
 function App() {
   const [articleContent, setArticContent] = useState('');
+  const [rewrittenContent, setRewrittenContent] = useState('');
   const [loading, setLoading] = useState(true);
+
+  const callMistralAPI = async (content) => {
+    try {
+      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.REACT_APP_MISTRAL_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "mistral-tiny",
+          messages: [{
+            role: "user",
+            content: `Please rewrite this article in a clear and concise way: ${content}`
+          }],
+          temperature: 0.7
+        })
+      });
+
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      console.error('Error calling Mistral API:', error);
+      return 'Error rewriting content';
+    }
+  };
 
   useEffect(() => {
     const scrapeArticle = async () => {
@@ -39,7 +66,13 @@ function App() {
           },
         });
 
-        setArticContent(result.result);
+        const scrapedContent = result.result;
+        setArticContent(scrapedContent);
+        
+        // Call Mistral API to rewrite the content
+        const rewritten = await callMistralAPI(scrapedContent);
+        setRewrittenContent(rewritten);
+        
         setLoading(false);
       } catch (error) {
         setArticContent('Error scraping content: ' + error.message);
@@ -54,7 +87,7 @@ function App() {
     <div className="w-[400px] h-[500px] bg-gray-100 p-4 overflow-auto">
       <div className="bg-white rounded-lg shadow p-4">
         <h1 className="text-xl font-bold text-blue-600 mb-4">
-          Article Content
+          Rewritten Article
         </h1>
         {loading ? (
           <div className="flex items-center justify-center">
@@ -62,7 +95,7 @@ function App() {
           </div>
         ) : (
           <div className="prose prose-sm max-w-none">
-            {articleContent.split('\n').map((paragraph, index) => (
+            {rewrittenContent.split('\n').map((paragraph, index) => (
               paragraph && <p key={index} className="mb-2 text-gray-700">{paragraph}</p>
             ))}
           </div>
