@@ -7,6 +7,7 @@ function App() {
   const [rewrittenContent, setRewrittenContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [tokenUsage, setTokenUsage] = useState(0);
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   useEffect(() => {
     const scrapeArticle = async () => {
@@ -68,12 +69,41 @@ function App() {
     scrapeArticle();
   }, []);
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(rewrittenContent);
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 1000); // Reset after 1 second
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
+  };
+
   return (
     <div className="w-[400px] h-[500px] bg-gray-100 p-4 overflow-auto">
       <div className="bg-white rounded-lg shadow p-4">
-        <h1 className="text-xl font-bold text-blue-600 mb-4">
-          Rewritten Article
-        </h1>
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={handleCopy}
+            disabled={loading || !rewrittenContent}
+            className={`px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 
+              ${loading || !rewrittenContent 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : copyFeedback 
+                  ? 'bg-green-600 scale-95' 
+                  : 'bg-blue-600 hover:bg-blue-700 hover:scale-105 active:scale-95'} 
+              text-white transform`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {copyFeedback ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              )}
+            </svg>
+            {copyFeedback ? 'Copied!' : 'Copy Summary'}
+          </button>
+        </div>
         <div className="prose prose-sm max-w-none">
           {loading && (
             <div className="flex items-center mb-2">
