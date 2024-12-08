@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Article Scraper Extension",
+  "description": "Scrapes main article content from webpages",
+  "version": "1.0",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Article Scraper"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ]
+} 
