@@ -26,6 +26,9 @@ function App() {
   };
 
   useEffect(() => {
+    // Add this to ensure the side panel stays open
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+    
     const scrapeArticle = async () => {
       try {
         // Get current active tab
@@ -96,7 +99,7 @@ function App() {
   };
 
   return (
-    <div className="w-[400px] h-[500px] bg-gray-100 p-4 overflow-auto">
+    <div className="w-[300px] min-h-screen bg-gray-100 p-4 overflow-auto">
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex justify-between mb-4">
           <button
