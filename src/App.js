@@ -5,9 +5,25 @@ import { callMistralAPI } from './services/mistralService';
 function App() {
   const [articleContent, setArticContent] = useState('');
   const [rewrittenContent, setRewrittenContent] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [tokenUsage, setTokenUsage] = useState(0);
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => {
+    chrome.storage.sync.get(['mistralApiKey'], (result) => {
+      if (result.mistralApiKey) {
+        setApiKey(result.mistralApiKey);
+      }
+    });
+  }, []);
+
+  const handleSaveApiKey = () => {
+    chrome.storage.sync.set({ mistralApiKey: apiKey }, () => {
+      setShowSettings(false);
+    });
+  };
 
   useEffect(() => {
     const scrapeArticle = async () => {
@@ -82,7 +98,13 @@ function App() {
   return (
     <div className="w-[400px] h-[500px] bg-gray-100 p-4 overflow-auto">
       <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-between mb-4">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg"
+          >
+            ⚙️ Settings
+          </button>
           <button
             onClick={handleCopy}
             disabled={loading || !rewrittenContent}
@@ -104,6 +126,31 @@ function App() {
             {copyFeedback ? 'Copied!' : 'Copy Summary'}
           </button>
         </div>
+
+        {showSettings && (
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-medium mb-2">Settings</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mistral API Key
+              </label>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="w-full p-2 border rounded-lg"
+                placeholder="Enter your Mistral API key"
+              />
+            </div>
+            <button
+              onClick={handleSaveApiKey}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Save
+            </button>
+          </div>
+        )}
+
         <div className="prose prose-sm max-w-none">
           {loading && (
             <div className="flex items-center mb-2">

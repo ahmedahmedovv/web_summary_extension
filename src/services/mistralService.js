@@ -1,6 +1,16 @@
+/* global chrome */
+
 import { getArticleRewritePrompt } from './prompts/articleRewritePrompt';
 
-export const callMistralAPI = async (content, onChunk, onComplete) => {
+export const callMistralAPI = async (content, onChunk, onTokenCount) => {
+  // Get API key from storage
+  const result = await chrome.storage.sync.get(['mistralApiKey']);
+  const apiKey = result.mistralApiKey;
+  
+  if (!apiKey) {
+    throw new Error('Please set your Mistral API key in the settings');
+  }
+
   let totalTokens = 0;
   let isComplete = false;
   
@@ -9,7 +19,7 @@ export const callMistralAPI = async (content, onChunk, onComplete) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.REACT_APP_MISTRAL_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: "mistral-large-latest",
@@ -57,8 +67,8 @@ export const callMistralAPI = async (content, onChunk, onComplete) => {
       }
     }
     
-    if (onComplete) {
-      onComplete(totalTokens);
+    if (onTokenCount) {
+      onTokenCount(totalTokens);
     }
     
   } catch (error) {
